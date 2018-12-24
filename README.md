@@ -25,76 +25,70 @@
 
         //1、获取系统的idfv
         public static var  uuidForVendor: String = {
-        
-        var deviceUUID = ""
-        if let idfv = UIDevice.current.identifierForVendor?.uuidString {
-        deviceUUID = idfv.lowercased()
-        deviceUUID = deviceUUID.replacingOccurrences(of: "-", with: "")
-        
+           var deviceUUID = ""
+           if let idfv = UIDevice.current.identifierForVendor?.uuidString {
+           deviceUUID = idfv.lowercased()
+           deviceUUID = deviceUUID.replacingOccurrences(of: "-", with: "")
         } else {
-        //idfv有可能获取不到，那就用
-        deviceUUID = ZBUUID.uuid
+           //idfv有可能获取不到，那就用
+           deviceUUID = ZBUUID.uuid
         }
-        
-        return deviceUUID;
+           return deviceUUID;
         }()
         
    
         ///2、 获取keychain或userDefaults上的值，没有的话，创建uuid值
-        ///
         func getValueForKey(key: String, userDefaults: Bool, keychain: Bool, accessGroup: String?,synchronizable: Bool) -> String? {
         
-        var value: String?
+           var value: String?
+           if keychain {
+              let keychain = KeychainSwift()
+              keychain.accessGroup = accessGroup
+              value = keychain.get(key)
+           }
         
-        if keychain {
-        let keychain = KeychainSwift()
-        keychain.accessGroup = accessGroup
-        value = keychain.get(key)
-        }
+           if value == nil && userDefaults {
+              value = UserDefaults.standard.value(forKey: key) as? String
         
-        if value == nil && userDefaults {
-        value = UserDefaults.standard.value(forKey: key) as? String
-        
-        //如果为空的话，设置UUID
-        value = ZBUUID.uuidForVendor
-        
-        //保存到keychin
-        self.setValue(value: value!, key: key, userDefaults: userDefaults, keychain: keychain, accessGroup: accessGroup, synchronizable: synchronizable)
+             //如果为空的话，设置UUID
+             value = ZBUUID.uuidForVendor
+         
+            //保存到keychin
+            self.setValue(value: value!, key: key, userDefaults: userDefaults, keychain: keychain, accessGroup: accessGroup, synchronizable: synchronizable)
         
         }else{
-        //注意：如果用户将属于此Vender的所有App卸载，则idfv的值会被重置，即再重装此Vender的App，idfv的值和之前不同。
-        // 所以如果KeyChian存在value的情况下，比较KeyChian中的value与取到 ZBUUID.uuidForVendor，不相等的话，更新KeyChian值
+            //注意：如果用户将属于此Vender的所有App卸载，则idfv的值会被重置，即再重装此Vender的App，idfv的值和之前不同。
+            // 所以如果KeyChian存在value的情况下，比较KeyChian中的value与取到 ZBUUID.uuidForVendor，不相等的话，更新KeyChian值
         
-        let newValue = ZBUUID.uuidForVendor
-        if value != newValue {
+            let newValue = ZBUUID.uuidForVendor
+            if value != newValue {
         
-        //如果不为空的话，设置UUID
-        value = ZBUUID.uuidForVendor
+            //如果不为空的话，设置UUID
+            value = ZBUUID.uuidForVendor
         
-        //保存到keychin
-        self.setValue(value: value!, key: key, userDefaults: userDefaults, keychain: keychain, accessGroup: accessGroup, synchronizable: synchronizable)
+            //保存到keychin
+            self.setValue(value: value!, key: key, userDefaults: userDefaults, keychain: keychain, accessGroup: accessGroup, synchronizable: synchronizable)
+            }
         }
-        }
-        
-        return value
+          return value
         }
 
         //3、保存键值到本地沙盒和keychain
         func setValue(value: String, key: String, userDefaults: Bool, keychain: Bool, accessGroup: String?, synchronizable: Bool) {
         
-        if userDefaults {
-        UserDefaults.standard.set(value, forKey: key)
-        UserDefaults.standard.synchronize();
-        }
+          if userDefaults {
+          UserDefaults.standard.set(value, forKey: key)
+          UserDefaults.standard.synchronize();
+          }
         
-        if keychain {
+         if keychain {
         
-        let keychain = KeychainSwift()
-        keychain.accessGroup = accessGroup
-        keychain.synchronizable = synchronizable
-        keychain.set(value, forKey: key)
-        }
-        }
+           let keychain = KeychainSwift()
+           keychain.accessGroup = accessGroup
+           keychain.synchronizable = synchronizable
+           keychain.set(value, forKey: key)
+         }
+      }
         
 
 更详细集成方法，根据实际的例子请查看源代码中的demo
